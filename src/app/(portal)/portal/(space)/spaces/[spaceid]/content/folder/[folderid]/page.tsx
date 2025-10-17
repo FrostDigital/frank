@@ -31,6 +31,8 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
     const queryClient = useQueryClient()
     const { t } = usePhrases();
     const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure()
+    const { isOpen: isDeletePromptOpen, onOpen: onDeletePromptOpen, onClose: onDeletePromptClose } = useDisclosure()
+    const [folderDeleteMode, setFolderDeleteMode] = useState<string>("DETACH")
     useEffect(() => {
         hideMainMenu()
         return () => {
@@ -83,6 +85,48 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
         }
     }
 
+    const deleteFolder = async (cascade: boolean) => {
+        setIsDeleteLoading(true)
+        try {
+            await apiClient.delete({
+                path: `/space/${params.spaceid}/folder/${params.folderid}${cascade ? '?cascade=true' : ''}`,
+                isAuthRequired: true,
+            })
+            toast({
+                title: `${name} deleted.`,
+                status: "success",
+                position: "bottom-right",
+            })
+            setIsDeleteLoading(false)
+            queryClient.removeQueries([["folders", params.spaceid]])
+            queryClient.removeQueries([["content", params.spaceid]])
+            router.replace(`/portal/spaces/${params.spaceid}/content/folder`)
+        } catch (ex) {
+            setIsDeleteLoading(false)
+            toast({
+                title: t("content_folder_folder_delete_error_title"),
+                description: t("content_folder_folder_delete_error_description"),
+                status: "error",
+                position: "bottom-right",
+            })
+        }
+    }
+
+    const handleDeleteClick = () => {
+        // Get the folder delete mode from environment variable
+        const mode = process.env.NEXT_PUBLIC_FOLDER_DELETE_MODE || "DETACH"
+        setFolderDeleteMode(mode)
+
+        if (mode === "PROMPT") {
+            onDeletePromptOpen()
+        } else if (mode === "CASCADE") {
+            onDeleteOpen()
+        } else {
+            // DETACH mode (default)
+            onDeleteOpen()
+        }
+    }
+
 
     return (
         <>
@@ -103,7 +147,7 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
                             <ModalBody overflow="auto" p={10}>
                                 <VStack alignItems={"flex-start"} spacing={5}>
                                     <Box>{t("content_folder_folder_delete_description1")}</Box>
-                                    <Box>{t("content_folder_folder_delete_description2")}</Box>
+                                    <Box>{folderDeleteMode === "CASCADE" ? "All content inside the folder will also be deleted." : t("content_folder_folder_delete_description2")}</Box>
                                 </VStack>
                             </ModalBody>
 
@@ -114,43 +158,66 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
                                     mr={3}
                                     minW="150px"
                                     onClick={async () => {
-
-                                        setIsDeleteLoading(true)
-                                        try {
-                                            await apiClient.delete({
-                                                path: `/space/${params.spaceid}/folder/${params.folderid}`,
-                                                isAuthRequired: true,
-                                            })
-                                            toast({
-                                                title: `${name} deleted.`,
-                                                status: "success",
-                                                position: "bottom-right",
-                                            })
-                                            setIsDeleteLoading(false)
-                                            queryClient.removeQueries([["folders", params.spaceid]])
-                                            queryClient.removeQueries([["content", params.spaceid]])
-                                            router.replace(`/portal/spaces/${params.spaceid}/content/folder`)
-                                        } catch (ex) {
-                                            setIsDeleteLoading(false)
-                                            toast({
-                                                title: t("content_folder_folder_delete_error_title"),
-                                                description: t("content_folder_folder_delete_error_description"),
-                                                status: "error",
-                                                position: "bottom-right",
-                                            })
-                                        }
-
-
+                                        onDeleteClose()
+                                        await deleteFolder(folderDeleteMode === "CASCADE")
                                     }}
-
                                 >
                                     {t("content_folder_folder_delete_button")}
                                 </Button>
                                 <Button
                                     variant="ghost"
                                     onClick={() => {
-
                                         onDeleteClose()
+                                    }}
+                                >
+                                    {t("cancel")}
+                                </Button>
+                            </ModalFooter>
+                        </ModalContent>
+                    </Modal>
+
+                    <Modal isOpen={isDeletePromptOpen} onClose={onDeletePromptClose} isCentered={true}>
+                        <ModalOverlay />
+                        <ModalContent maxW="600px">
+                            <ModalHeader pt={10} px={10} pb={0}>
+                                {t("content_folder_folder_delete_prompt_heading")}
+                            </ModalHeader>
+                            <ModalCloseButton right={10} top={10} />
+                            <ModalBody overflow="auto" p={10}>
+                                <VStack alignItems={"flex-start"} spacing={5}>
+                                    <Box>{t("content_folder_folder_delete_prompt_description")}</Box>
+                                </VStack>
+                            </ModalBody>
+
+                            <ModalFooter pb={10} px={10} gap={10}>
+                                <Button
+                                    isLoading={isDeleteLoading}
+                                    colorScheme="red"
+                                    mr={3}
+                                    minW="200px"
+                                    onClick={async () => {
+                                        onDeletePromptClose()
+                                        await deleteFolder(true)
+                                    }}
+                                >
+                                    {t("content_folder_folder_delete_prompt_button_folder_and_content")}
+                                </Button>
+                                <Button
+                                    isLoading={isDeleteLoading}
+                                    colorScheme="blue"
+                                    mr={3}
+                                    minW="200px"
+                                    onClick={async () => {
+                                        onDeletePromptClose()
+                                        await deleteFolder(false)
+                                    }}
+                                >
+                                    {t("content_folder_folder_delete_prompt_button_folder_only")}
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => {
+                                        onDeletePromptClose()
                                     }}
                                 >
                                     {t("cancel")}
@@ -233,7 +300,7 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
 
                                 <Box w="100%">
                                     <Box mb={5}>{t("content_folder_folder_dangerzone")}</Box>
-                                    <Button leftIcon={<Trash></Trash>} onClick={onDeleteOpen}>{t("content_folder_folder_delete")}</Button>
+                                    <Button leftIcon={<Trash></Trash>} onClick={handleDeleteClick}>{t("content_folder_folder_delete")}</Button>
                                 </Box>
 
                             </VStack>

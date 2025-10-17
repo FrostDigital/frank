@@ -10,15 +10,32 @@ export async function DELETE(req: Request, context: { params: { spaceid: string;
             if (!folder) {
                 return returnNotFound("Folder not found")
             }
+
+            // Get cascade parameter from query string
+            const url = new URL(req.url)
+            const cascadeParam = url.searchParams.get("cascade")
+            const cascade = cascadeParam === "true"
+
+            // Delete the folder
             collections.folder.deleteMany({ spaceId: context.params.spaceid, folderId: context.params.folderid })
 
-            collections.content.updateMany(
-                {
+            // Handle content in the folder based on cascade parameter
+            if (cascade) {
+                // CASCADE mode: Delete all content in the folder
+                await collections.content.deleteMany({
                     spaceId: context.params.spaceid,
                     folderId: context.params.folderid,
-                },
-                { $unset: { folderId: true } }
-            )
+                })
+            } else {
+                // DETACH mode: Remove folder reference from content
+                collections.content.updateMany(
+                    {
+                        spaceId: context.params.spaceid,
+                        folderId: context.params.folderid,
+                    },
+                    { $unset: { folderId: true } }
+                )
+            }
 
             return returnJSON<{}>({}, z.object({}))
         })
