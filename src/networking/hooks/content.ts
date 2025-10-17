@@ -9,26 +9,27 @@ export function useContent(spaceId: string, options: {}) {
 
   const router = useRouter()
 
+  const { ...queryOptions } = options
+
   const { data, ...rest } = useQuery(
     [["content", spaceId]],
     async () => {
-
 
       const response = await apiClient
         .get<GetContentResponse>({
           path: `/space/${spaceId}/content`,
           isAuthRequired: true,
         })
-      return response.items
+      return response
 
 
     },
-    options
+    queryOptions
 
   );
 
   return {
-    items: data,
+    items: data?.items,
     ...rest,
   };
 }

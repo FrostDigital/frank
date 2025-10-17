@@ -9,12 +9,36 @@ import { apiClient } from "@/networking/ApiClient"
 import { useContentypes } from "@/networking/hooks/contenttypes"
 import { useFolders } from "@/networking/hooks/folder"
 import { useAppStore } from "@/stores/appStore"
-import { Box, Button, Center, Container, Grid, GridItem, HStack, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Spinner, Table, Tbody, Td, Th, Thead, Tr, VStack, useDisclosure, useToast } from "@chakra-ui/react"
+import {
+    Box,
+    Button,
+    Center,
+    Container,
+    Grid,
+    GridItem,
+    HStack,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    Spinner,
+    Table,
+    Tbody,
+    Td,
+    Th,
+    Thead,
+    Tr,
+    VStack,
+    useDisclosure,
+    useToast,
+} from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Trash } from "react-feather"
-
 
 export default function Home({ params }: { params: { spaceid: string; folderid: string } }) {
     const { showMainMenu, hideMainMenu } = useAppStore((state) => state)
@@ -29,7 +53,7 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
     const [isSaveLoading, setIsSaveLoading] = useState<boolean>(false)
     const [isDeleteLoading, setIsDeleteLoading] = useState<boolean>(false)
     const queryClient = useQueryClient()
-    const { t } = usePhrases();
+    const { t } = usePhrases()
     const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure()
     const { isOpen: isDeletePromptOpen, onOpen: onDeletePromptOpen, onClose: onDeletePromptClose } = useDisclosure()
     const [folderDeleteMode, setFolderDeleteMode] = useState<string>("DETACH")
@@ -41,19 +65,17 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
     }, [])
     useEffect(() => {
         if (!folders) return
-        if (!contenttypes) return;
-        const folder = folders.find(f => f.folderId === params.folderid)
+        if (!contenttypes) return
+        const folder = folders.find((f) => f.folderId === params.folderid)
         if (!folder) {
-            router.back();
-            return;
+            router.back()
+            return
         }
         setName(folder.name)
         setLimited(folder.contentTypes.length > 0)
         setLimitedContentTypes(folder.contentTypes)
-        setIsLoading(false);
+        setIsLoading(false)
     }, [contenttypes, folders])
-
-
 
     const save = async () => {
         setIsSaveLoading(true)
@@ -62,7 +84,7 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
                 path: `/space/${params.spaceid}/folder/${params.folderid}`,
                 body: {
                     name,
-                    contentTypes: limited ? limitedContentTypes : []
+                    contentTypes: limited ? limitedContentTypes : [],
                 },
                 isAuthRequired: true,
             })
@@ -89,7 +111,7 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
         setIsDeleteLoading(true)
         try {
             await apiClient.delete({
-                path: `/space/${params.spaceid}/folder/${params.folderid}${cascade ? '?cascade=true' : ''}`,
+                path: `/space/${params.spaceid}/folder/${params.folderid}${cascade ? "?cascade=true" : ""}`,
                 isAuthRequired: true,
             })
             toast({
@@ -115,6 +137,7 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
     const handleDeleteClick = () => {
         // Get the folder delete mode from environment variable
         const mode = process.env.NEXT_PUBLIC_FOLDER_DELETE_MODE || "DETACH"
+
         setFolderDeleteMode(mode)
 
         if (mode === "PROMPT") {
@@ -127,7 +150,6 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
         }
     }
 
-
     return (
         <>
             {isLoading ? (
@@ -136,7 +158,6 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
                 </Center>
             ) : (
                 <>
-
                     <Modal isOpen={isDeleteOpen} onClose={onDeleteClose} isCentered={true}>
                         <ModalOverlay />
                         <ModalContent maxW="600px">
@@ -147,7 +168,9 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
                             <ModalBody overflow="auto" p={10}>
                                 <VStack alignItems={"flex-start"} spacing={5}>
                                     <Box>{t("content_folder_folder_delete_description1")}</Box>
-                                    <Box>{folderDeleteMode === "CASCADE" ? "All content inside the folder will also be deleted." : t("content_folder_folder_delete_description2")}</Box>
+                                    <Box>
+                                        {folderDeleteMode === "CASCADE" ? "All content inside the folder will also be deleted." : t("content_folder_folder_delete_description2")}
+                                    </Box>
                                 </VStack>
                             </ModalBody>
 
@@ -189,12 +212,14 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
                                 </VStack>
                             </ModalBody>
 
-                            <ModalFooter pb={10} px={10} gap={10}>
+                            <ModalFooter pb={10} px={10} gap={4} flexDirection="column" alignItems="stretch">
                                 <Button
                                     isLoading={isDeleteLoading}
                                     colorScheme="red"
-                                    mr={3}
-                                    minW="200px"
+                                    bg="#ff0f0f"
+                                    whiteSpace="normal"
+                                    height="auto"
+                                    py={3}
                                     onClick={async () => {
                                         onDeletePromptClose()
                                         await deleteFolder(true)
@@ -204,9 +229,10 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
                                 </Button>
                                 <Button
                                     isLoading={isDeleteLoading}
-                                    colorScheme="blue"
-                                    mr={3}
-                                    minW="200px"
+                                    colorScheme="red"
+                                    whiteSpace="normal"
+                                    height="auto"
+                                    py={3}
                                     onClick={async () => {
                                         onDeletePromptClose()
                                         await deleteFolder(false)
@@ -225,10 +251,6 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
                             </ModalFooter>
                         </ModalContent>
                     </Modal>
-
-
-
-
 
                     <SaveMenuBar
                         positiveText={t("content_folder_folder_savebar_save")}
@@ -253,61 +275,84 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
                     </SaveMenuBar>
                     <Box backgroundColor={"#fff"} minH={"100vh"} pt="120px" pb={"50px"}>
                         <Container maxW="1000px">
-
                             <VStack w="100%" spacing="60px">
-
                                 <Grid templateColumns="3fr 2fr" rowGap="60px" columnGap={20} w="100%">
                                     <GridItem>
-                                        <TextInput subject={t("content_folder_folder_input_name_subject")} placeholder={t("content_folder_folder_input_name_placeholder")} value={name} onChange={setName} focus={true}></TextInput>
+                                        <TextInput
+                                            subject={t("content_folder_folder_input_name_subject")}
+                                            placeholder={t("content_folder_folder_input_name_placeholder")}
+                                            value={name}
+                                            onChange={setName}
+                                            focus={true}
+                                        ></TextInput>
                                     </GridItem>
                                     <GridItem>
-                                        <TextInput subject={t("content_folder_folder_input_contenttype_subject")} value={params.folderid} disabled={true} enableCopy={true}></TextInput>
+                                        <TextInput
+                                            subject={t("content_folder_folder_input_contenttype_subject")}
+                                            value={params.folderid}
+                                            disabled={true}
+                                            enableCopy={true}
+                                        ></TextInput>
                                     </GridItem>
                                 </Grid>
-                                <CheckboxInput checked={limited} align="top" onChange={setLimited} uncheckedBody={<Box>{t("content_folder_folder__limit_unchecked_title")}</Box>} checkedBody={
-                                    <VStack w="100%" alignItems={"flex-start"}>
-                                        <Box w="100%">{t("content_folder_folder__limit_checked_title")}</Box>
-                                        <Table>
-                                            <Thead>
-                                                <Tr>
-                                                    <Th>{t("content_folder_folder__limit_checked_contenttype")}</Th>
-                                                </Tr>
-
-                                            </Thead>
-                                            <Tbody>
-                                                {contenttypes?.map((c) => {
-                                                    return <Tr key={c.contentTypeId}><Td><SimpleCheckboxInput checked={limitedContentTypes.includes(c.contentTypeId)} description={c.name} onChange={(checked) => {
-                                                        let newItems = [...limitedContentTypes];
-                                                        if (checked) {
-                                                            if (!newItems.includes(c.contentTypeId)) {
-                                                                newItems.push(c.contentTypeId)
-                                                            }
-                                                        } else {
-                                                            if (newItems.includes(c.contentTypeId)) {
-                                                                newItems = newItems.filter(n => n !== c.contentTypeId)
-                                                            }
-                                                        }
-                                                        setLimitedContentTypes(newItems)
-                                                    }}></SimpleCheckboxInput></Td></Tr>
-                                                })}
-                                            </Tbody>
-                                        </Table>
-
-                                    </VStack>
-
-
-                                } subject={t("content_folder_folder__limit_titel")}></CheckboxInput>
+                                <CheckboxInput
+                                    checked={limited}
+                                    align="top"
+                                    onChange={setLimited}
+                                    uncheckedBody={<Box>{t("content_folder_folder__limit_unchecked_title")}</Box>}
+                                    checkedBody={
+                                        <VStack w="100%" alignItems={"flex-start"}>
+                                            <Box w="100%">{t("content_folder_folder__limit_checked_title")}</Box>
+                                            <Table>
+                                                <Thead>
+                                                    <Tr>
+                                                        <Th>{t("content_folder_folder__limit_checked_contenttype")}</Th>
+                                                    </Tr>
+                                                </Thead>
+                                                <Tbody>
+                                                    {contenttypes?.map((c) => {
+                                                        return (
+                                                            <Tr key={c.contentTypeId}>
+                                                                <Td>
+                                                                    <SimpleCheckboxInput
+                                                                        checked={limitedContentTypes.includes(c.contentTypeId)}
+                                                                        description={c.name}
+                                                                        onChange={(checked) => {
+                                                                            let newItems = [...limitedContentTypes]
+                                                                            if (checked) {
+                                                                                if (!newItems.includes(c.contentTypeId)) {
+                                                                                    newItems.push(c.contentTypeId)
+                                                                                }
+                                                                            } else {
+                                                                                if (newItems.includes(c.contentTypeId)) {
+                                                                                    newItems = newItems.filter((n) => n !== c.contentTypeId)
+                                                                                }
+                                                                            }
+                                                                            setLimitedContentTypes(newItems)
+                                                                        }}
+                                                                    ></SimpleCheckboxInput>
+                                                                </Td>
+                                                            </Tr>
+                                                        )
+                                                    })}
+                                                </Tbody>
+                                            </Table>
+                                        </VStack>
+                                    }
+                                    subject={t("content_folder_folder__limit_titel")}
+                                ></CheckboxInput>
 
                                 <Box w="100%">
                                     <Box mb={5}>{t("content_folder_folder_dangerzone")}</Box>
-                                    <Button leftIcon={<Trash></Trash>} onClick={handleDeleteClick}>{t("content_folder_folder_delete")}</Button>
+                                    <Button leftIcon={<Trash></Trash>} onClick={handleDeleteClick}>
+                                        {t("content_folder_folder_delete")}
+                                    </Button>
                                 </Box>
-
                             </VStack>
                         </Container>
                     </Box>
                 </>
             )}
-        </>)
-
+        </>
+    )
 }

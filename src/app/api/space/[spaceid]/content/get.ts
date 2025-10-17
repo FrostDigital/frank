@@ -37,27 +37,6 @@ export async function GET(req: Request, context: { params: { spaceid: string } }
             const folders = await collections.folder.findMany({ spaceId: context.params.spaceid });
             const users = await collections.user.findMany({});
 
-            //Generate a projection and get only required data
-            let contentDatasProjection : any = { contentId : 1, languageId : 1 } 
-            contentTypes.forEach(c=>{
-                const titleField = c.fields.find(f=>f.title);
-                if(titleField){
-                    contentDatasProjection[`data.${titleField.fieldId}`] = 1;
-                }
-            })
-            const contentDatas = await collections.contentData.aggregate([ 
-                { 
-                    $match : { spaceId: context.params.spaceid, languageId : space.defaultLanguage }
-                },
-                {
-                    $project : contentDatasProjection 
-                }
-            ])
-            let contentDatasRecord : Record<string, any> = {};
-            contentDatas.forEach(c=>{
-                contentDatasRecord[c.contentId] = c
-            })           
-
             const aggregatedData = await collections.content.aggregate<ItemAggregationResult>([
                 {
                     $match: { spaceId: context.params.spaceid, status: { $ne: "new" } },
@@ -81,10 +60,31 @@ export async function GET(req: Request, context: { params: { spaceid: string } }
                     $sort: {
                         modifiedDate: -1,
                     },
-                },
+                }
             ])
 
-          
+            // Generate a projection and get only required data
+            let contentDatasProjection : any = { contentId : 1, languageId : 1 }
+            contentTypes.forEach(c=>{
+                const titleField = c.fields.find(f=>f.title);
+                if(titleField){
+                    contentDatasProjection[`data.${titleField.fieldId}`] = 1;
+                }
+            })
+            const contentDatas = await collections.contentData.aggregate([
+                {
+                    $match : { spaceId: context.params.spaceid, languageId : space.defaultLanguage }
+                },
+                {
+                    $project : contentDatasProjection
+                }
+            ])
+            let contentDatasRecord : Record<string, any> = {};
+            contentDatas.forEach(c=>{
+                contentDatasRecord[c.contentId] = c
+            })
+
+
 
             const items = aggregatedData.map((item) => {
                 const {  ...rest } = item
@@ -131,11 +131,11 @@ export const GET_DOC: generateRouteInfoParams = {
     tags: ["content"],
     path: "/space/:spaceid/content",
     method: "get",
-    summary: "List content",
+    summary: "List content with pagination",
     requiresAuth: "user-jwt-token",
     params: ["spaceid"],
     responseSchema: GetContentResponseSchema,
-    responseDescription: "List of content",
+    responseDescription: "Paginated list of content with total count and hasMore flag",
     errors: {
 
     }

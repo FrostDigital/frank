@@ -44,9 +44,8 @@ import { useEffect, useState } from "react"
 import { ChevronDown, Eye, EyeOff, Layers, Loader, Search, Trash2, X } from "react-feather"
 
 export default function Home({ params }: { params: { spaceid: string } }) {
-
-    const { t } = usePhrases();
-    const { setSelectedFolder, selectedFolder } = useAppStore(state=>state);
+    const { t } = usePhrases()
+    const { setSelectedFolder, selectedFolder } = useAppStore((state) => state)
 
     const router = useRouter()
     const [mode, setMode] = useState<"list" | "notready" | "loading" | "create">("loading")
@@ -74,34 +73,27 @@ export default function Home({ params }: { params: { spaceid: string } }) {
     const toast = useToast()
 
     const [filteredItems, setFilteredItems] = useState<ContentInternalViewModel[]>([])
-    const [allVisibleItems, setAllVisibileItems] = useState<ContentInternalViewModel[]>()
 
-    useEffect(()=>{
-        if(selectedFolder){
+    useEffect(() => {
+        if (selectedFolder) {
             setFilterFolder(selectedFolder)
         }
     }, [])
 
-    useEffect(()=>{
-        if(!contenttypes) return;
-        if(!allItems) return;
-
-       if(showHidden){
-            setAllVisibileItems([...allItems].filter(p=>!p.managedByModule))
-       }else{
-            setAllVisibileItems([...allItems].filter(p=>{
-                if(p.managedByModule) return false;
-                const contentType = contenttypes.find(c=>c.contentTypeId === p.contentTypeId);
-                if(contentType && contentType.hidden) return false
-                return true;
-            }))
-       }
-    }, [contenttypes, allItems, showHidden])
-
     useEffect(() => {
-        if (!allVisibleItems) return
-        const filtered = allVisibleItems.filter((item) => {
-            if(item.managedByModule) return false;
+        if (!allItems) return
+        if (!contenttypes) return
+
+        const filtered = allItems.filter((item) => {
+            // Filter out managed by module items
+            if (item.managedByModule) return false
+
+            // Filter hidden content types unless showHidden is true
+            if (!showHidden) {
+                const contentType = contenttypes.find((c) => c.contentTypeId === item.contentTypeId)
+                if (contentType && contentType.hidden) return false
+            }
+
             if (filterFolder) {
                 if (item.folderId !== filterFolder) return false
             }
@@ -167,7 +159,7 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                 setCreatableContentTypes(
                     contenttypes
                         ?.filter((item) => {
-                            if(!showHidden && item.hidden) return false;
+                            if (!showHidden && item.hidden) return false
                             if (filterContentType) {
                                 if (item.contentTypeId !== filterContentType) return false
                             }
@@ -183,7 +175,7 @@ export default function Home({ params }: { params: { spaceid: string } }) {
             setCreatableContentTypes(
                 contenttypes
                     ?.filter((item) => {
-                        if(!showHidden && item.hidden) return false;
+                        if (!showHidden && item.hidden) return false
                         if (!item.enabled) return false
                         if (filterContentType) {
                             if (item.contentTypeId !== filterContentType) return false
@@ -195,16 +187,18 @@ export default function Home({ params }: { params: { spaceid: string } }) {
         }
 
         setFilteredItems(filtered)
-    }, [allVisibleItems, filterFolder, filterContentType, filterUser, filterStatus, filterSearch, filterDates, filterDate, showHidden])
+    }, [allItems, contenttypes, filterFolder, filterContentType, filterUser, filterStatus, filterSearch, filterDates, filterDate, showHidden])
 
-    useEffect(()=>{
-            setSelectedFolder(filterFolder || "")
+    useEffect(() => {
+        setSelectedFolder(filterFolder || "")
     }, [filterFolder])
 
     function extractFilters() {
-        if (!allVisibleItems) return
+        if (!allItems) return
+        if (!contenttypes) return
+
         let folders: FilterItem[] = []
-        let contenttypes: FilterItem[] = []
+        let contentTypesFilter: FilterItem[] = []
         let authors: FilterItem[] = []
         let dates: FilterItem[] = []
 
@@ -216,16 +210,27 @@ export default function Home({ params }: { params: { spaceid: string } }) {
             this_year: false,
             last_year: false,
         }
-        allVisibleItems.forEach((item) => {
+
+        // Extract filters from all items (except hidden/managed)
+        const visibleItems = allItems.filter((item) => {
+            if (item.managedByModule) return false
+            if (!showHidden) {
+                const contentType = contenttypes.find((c) => c.contentTypeId === item.contentTypeId)
+                if (contentType && contentType.hidden) return false
+            }
+            return true
+        })
+
+        visibleItems.forEach((item) => {
             if (item.folderId) {
                 const folder = folders.find((f) => f.id === item.folderId)
                 if (!folder) {
                     folders.push({ id: item.folderId, name: item.folderName || t("content_page_unknown_folder") })
                 }
             }
-            const contenttype = contenttypes.find((c) => c.id === item.contentTypeId)
+            const contenttype = contentTypesFilter.find((c) => c.id === item.contentTypeId)
             if (!contenttype) {
-                contenttypes.push({ id: item.contentTypeId, name: item.contentTypeName })
+                contentTypesFilter.push({ id: item.contentTypeId, name: item.contentTypeName })
             }
             const author = authors.find((c) => c.id === item.modifiedUserId)
             if (!author) {
@@ -260,28 +265,27 @@ export default function Home({ params }: { params: { spaceid: string } }) {
 
         dates = []
         if (foundDates.today) dates.push({ id: "today", name: t("today") })
-        if (foundDates.yesterday) dates.push({ id: "yesterday", name:  t("yesterday") })
+        if (foundDates.yesterday) dates.push({ id: "yesterday", name: t("yesterday") })
         if (foundDates.this_month) dates.push({ id: "this_month", name: t("this_month") })
         if (foundDates.last_month) dates.push({ id: "last_month", name: t("last_month") })
-        if (foundDates.this_year) dates.push({ id: "this_year", name: t("this_year")})
-        if (foundDates.last_year) dates.push({ id: "last_year", name:t("last_year") })
+        if (foundDates.this_year) dates.push({ id: "this_year", name: t("this_year") })
+        if (foundDates.last_year) dates.push({ id: "last_year", name: t("last_year") })
 
         setFilterFolders(folders)
-        setFilterContentTypes(contenttypes)
+        setFilterContentTypes(contentTypesFilter)
         setFilterUsers(authors)
         setFilterDates(dates)
     }
 
     useEffect(() => {
         extractFilters()
-    }, [allVisibleItems])
+    }, [allItems, contenttypes, showHidden])
 
     useEffect(() => {
         if (!profile) return
         if (!spaces) return
         if (!contenttypes) return
         if (!allItems) return
-        if(!allVisibleItems) return;
         if (!folders) return
         const space = spaces.find((s) => s.spaceId === params.spaceid)
         setSpace(space)
@@ -294,7 +298,7 @@ export default function Home({ params }: { params: { spaceid: string } }) {
         } else {
             setMode("notready")
         }
-    }, [spaces, profile, contenttypes, allItems,allVisibleItems, folders])
+    }, [spaces, profile, contenttypes, allItems, folders])
 
     async function create(contentTypeId: string) {
         setCreateLoading(true)
@@ -322,7 +326,7 @@ export default function Home({ params }: { params: { spaceid: string } }) {
         }
     }
 
-     return (
+    return (
         <>
             {mode == "loading" && (
                 <Center h="100vh" w="100%">
@@ -395,12 +399,8 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                 <VStack alignItems="flex-start" spacing="5">
                                     <Heading>{t("content_page_create_heading")}</Heading>
                                     <Box color="grey" fontSize="14px">
-                                        <Box>
-                                           {t("content_page_create_description1")}
-                                        </Box>
-                                        <Box mt="5">
-                                            {t("content_page_create_description2")}
-                                        </Box>
+                                        <Box>{t("content_page_create_description1")}</Box>
+                                        <Box mt="5">{t("content_page_create_description2")}</Box>
                                     </Box>
                                 </VStack>
                             </Box>
@@ -443,7 +443,6 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                         <Flex flex={1} flexDir={"row"}>
                             <Flex bg="#fff" width="250px" p={5}>
                                 <VStack spacing={10} alignItems={"flex-start"} w="100%">
-                                
                                     <SelectionList
                                         subject={t("content_page_filter_folder_subject")}
                                         items={filterFolders}
@@ -462,22 +461,18 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                         selectedItemId={filterContentType}
                                         onClick={setFilterContentType}
                                         anyText={t("content_page_filter_contenttype_anytext")}
-                                        
                                         settingsIcon={showHidden ? <EyeOff></EyeOff> : <Eye></Eye>}
-                                        settingsTooltip={showHidden ?   t("content_page_filter_contenttype_tooltip_hide") : t("content_page_filter_contenttype_tooltip_show") }
+                                        settingsTooltip={showHidden ? t("content_page_filter_contenttype_tooltip_hide") : t("content_page_filter_contenttype_tooltip_show")}
                                         onSettings={() => {
                                             setShowHidden(!showHidden)
                                         }}
                                     ></SelectionList>
 
-
-
-
                                     <SelectionList
                                         subject={t("content_page_filter_status_subject")}
                                         items={[
                                             { id: "draft", name: t("content_page_filter_status_status_draft") },
-                                            { id: "published", name: t("content_page_filter_status_status_published")},
+                                            { id: "published", name: t("content_page_filter_status_status_published") },
                                             { id: "scheduled", name: t("content_page_filter_status_status_scheduled") },
                                         ]}
                                         selectedItemId={filterStatus}
@@ -489,11 +484,22 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                         }}
                                         settingsTooltip={t("content_page_filter_status_tooltip")}
                                     ></SelectionList>
-  
 
-                                    <SelectionList subject={t("content_page_filter_modifiedby_subject")} items={filterUsers} selectedItemId={filterUser} onClick={setFilterUser} anyText={t("content_page_filter_modifiedby_anytext")}></SelectionList>
+                                    <SelectionList
+                                        subject={t("content_page_filter_modifiedby_subject")}
+                                        items={filterUsers}
+                                        selectedItemId={filterUser}
+                                        onClick={setFilterUser}
+                                        anyText={t("content_page_filter_modifiedby_anytext")}
+                                    ></SelectionList>
 
-                                    <SelectionList subject={t("content_page_filter_modified_subject")} items={filterDates} selectedItemId={filterDate} onClick={setFilterDate} anyText={t("content_page_filter_modified_anytext")}></SelectionList>
+                                    <SelectionList
+                                        subject={t("content_page_filter_modified_subject")}
+                                        items={filterDates}
+                                        selectedItemId={filterDate}
+                                        onClick={setFilterDate}
+                                        anyText={t("content_page_filter_modified_anytext")}
+                                    ></SelectionList>
                                 </VStack>
                             </Flex>
                             <Flex flex={1}>
@@ -518,7 +524,12 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                         {contenttypes.filter((item) => creatableContentTypes.includes(item.contentTypeId)).length > 0 && (
                                             <Menu>
                                                 {contenttypes.filter((item) => creatableContentTypes.includes(item.contentTypeId)).length === 1 ? (
-                                                    <Tooltip label={t("content_page_list_create_tooltip", contenttypes.find((item) => creatableContentTypes.includes(item.contentTypeId))!.name)}>
+                                                    <Tooltip
+                                                        label={t(
+                                                            "content_page_list_create_tooltip",
+                                                            contenttypes.find((item) => creatableContentTypes.includes(item.contentTypeId))!.name
+                                                        )}
+                                                    >
                                                         <Button
                                                             colorScheme="green"
                                                             width="150px"
@@ -574,12 +585,13 @@ export default function Home({ params }: { params: { spaceid: string } }) {
 
                                                         <Th w="20%">{t("content_page_list_table_header_modified")}</Th>
 
-                                                        <Th w="10%" minWidth="150px">{t("content_page_list_table_header_status")}</Th>
-
+                                                        <Th w="10%" minWidth="150px">
+                                                            {t("content_page_list_table_header_status")}
+                                                        </Th>
                                                     </Tr>
                                                 </Thead>
                                                 <Tbody>
-                                                    {filteredItems.slice(0, 250).map((item) => (
+                                                    {filteredItems.map((item) => (
                                                         <Tr
                                                             _hover={{ backgroundColor: "#fff", cursor: "pointer" }}
                                                             key={item.contentId}
@@ -616,7 +628,6 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                                                     </Tag>
                                                                 )}
                                                             </Td>
-                                                            
                                                         </Tr>
                                                     ))}
                                                 </Tbody>
