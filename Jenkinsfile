@@ -48,18 +48,11 @@ pipeline {
           branch 'main'
         }
       }
-      steps {
-        withCredentials([
-          // Full Mongo URL as Secret Text in Jenkins
-          string(credentialsId: 'frank-mongo-url', variable: 'MONGO_URL'),
-          // AWS credential (kind = "AWS Credentials"). If your agent has an instance role, you can remove this binding.
-          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-ecr-credentials']
-        ]) {
-          script {
+      script {
             def gitCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-            def branch    = env.BRANCH_NAME
-            def stamp     = new Date().format('yyyyMMddHHmmss')
-            def newTag    = "${branch}-${stamp}-${gitCommit}"
+            def branch = env.BRANCH_NAME
+            // Tag will be in the format: develop-20210803120000-abc123
+            def newTag = "${branch}-${new Date().format('yyyyMMddHHmmss')}-${gitCommit}"
 
             // Login to ECR
             sh """
@@ -83,16 +76,14 @@ pipeline {
             env.DOCKER_TAG = newTag
 
             // Optionally also push a semver tag on main/master
-            if ((branch == 'main' || branch == 'master') && params.NEW_VERSION?.trim()) {
+            if ((branch == 'main') && params.NEW_VERSION?.trim()) {
               sh """
                 docker tag  ${env.ECR_REGISTRY}/${env.APP_NAME}:${newTag} \
                             ${env.ECR_REGISTRY}/${env.APP_NAME}:${params.NEW_VERSION}
                 docker push ${env.ECR_REGISTRY}/${env.APP_NAME}:${params.NEW_VERSION}
               """
             }
-          }
-        }
-      }
+      }             
     }
   }
 
