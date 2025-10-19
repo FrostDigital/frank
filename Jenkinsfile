@@ -83,13 +83,7 @@ pipeline {
                 docker push ${env.ECR_REGISTRY}/${env.APP_NAME}:${params.NEW_VERSION}
               """
             }
-      }             
-    }
-  }
-
-  post {
-    always {
-      sh 'docker image prune -f || true'
+       }
     }
   }
 }
