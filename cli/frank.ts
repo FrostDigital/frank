@@ -1,7 +1,7 @@
 import { dbCollection } from '../src/lib/constants';
 import 'dotenv/config'
 
-import clientPromise from '../src/lib/mongodb';
+import getClientPromise from '../src/lib/mongodb';
 import { v4 as uuidv4 } from "uuid";
 import { Command } from 'commander'
 import { User } from '../src/models/user';
@@ -22,7 +22,7 @@ program.command('user-create')
       console.log("Invalid role: admin|user");
       process.exit();
     }
-    const client = await clientPromise;
+    const client = await getClientPromise();
     const user: User = {
       userId: uuidv4(),
       email: email.toLowerCase(),

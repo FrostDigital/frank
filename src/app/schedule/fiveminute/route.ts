@@ -4,6 +4,8 @@ import { processTryingEvents } from "@/lib/webhook";
 import dayjs from "dayjs";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request, context: { params: { spaceid: string } }) {
     await processTryingEvents()  
     

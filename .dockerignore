@@ -1,3 +1,28 @@
+# Dependencies
 node_modules
-.env.local.*
+
+# Environment files - CRITICAL: Do not copy secrets
+.env
+.env*
+cli/.env
+
+# Version control
+.git
+.gitignore
+
+# Build artifacts
+.next/
+out/
+
+# CI/CD
 ci
+
+# Development files
+.prettierrc
+*.md
+CLAUDE.md
+
+# OS files
+.DS_Store
+
+cli

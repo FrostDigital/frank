@@ -1,7 +1,7 @@
 import { returnError, returnJSON, returnNotFound, withRequestBody, withUser } from "@/lib/apiUtils"
 import { Permissions, dbCollection, errorCodes } from "@/lib/constants"
 import { z } from "zod"
-import clientPromise from "@/lib/mongodb"
+import getClientPromise from "@/lib/mongodb"
 import { User, UserSchema } from "@/models/user"
 import { WithId } from "mongodb"
 import { jwtType, sign, verify } from "@/lib/jwt"

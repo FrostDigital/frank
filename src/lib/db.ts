@@ -1,5 +1,5 @@
 import { Document, Filter, ObjectId, OptionalUnlessRequiredId, UpdateFilter, WithId } from "mongodb";
-import clientPromise from "./mongodb";
+import getClientPromise from "./mongodb";
 import { User } from "@/models/user";
 import { dbCollection } from "./constants";
 import { SpaceUser } from "@/models/spaceuser";
@@ -26,11 +26,11 @@ export class DatabaseCollection<T extends Document>{
     }
 
     async collection() {
-        const client = await clientPromise;
+        const client = await getClientPromise();
         return client.db().collection<T>(this.collectionName)
     }
     async findOne(filter: Filter<T>) {
-        const client = await clientPromise;
+        const client = await getClientPromise();
         const item = await (await this.collection()).findOne<WithId<T>>(filter)
         if (!item) {
             return
@@ -40,7 +40,7 @@ export class DatabaseCollection<T extends Document>{
         }
     }
     async getById(_id: ObjectId) {
-        const client = await clientPromise;
+        const client = await getClientPromise();
         const item = await client.db().collection(this.collectionName).findOne<WithId<T>>({ _id })
         if (!item) {
             return
@@ -51,35 +51,35 @@ export class DatabaseCollection<T extends Document>{
     }
 
     async aggregate<R extends Document>(pipeline: Document[]) {
-        const client = await clientPromise;
+        const client = await getClientPromise();
         //return await (await this.collection()).aggregate<R>(pipeline).toArray()
 
         return await (await this.collection()).aggregate<R>(pipeline).toArray()
     }
 
     async create(obj: OptionalUnlessRequiredId<T>) {
-        const client = await clientPromise;
+        const client = await getClientPromise();
         const insertResult = await (await this.collection()).insertOne(obj)
         return await this.getById(insertResult.insertedId)
     }
 
     async findMany(filter: UpdateFilter<T>) {
-        const client = await clientPromise;
+        const client = await getClientPromise();
         return await (await this.collection()).find<T>(filter).project({ _id: 0 }).toArray() as T[]
     }
     async deleteMany(filter: UpdateFilter<T>) {
-        const client = await clientPromise;
+        const client = await getClientPromise();
         await (await this.collection()).deleteMany(filter);
     }
 
     async updateOne(filter: Filter<T>, update: UpdateFilter<T>) {
-        const client = await clientPromise;
+        const client = await getClientPromise();
         const res = await (await this.collection()).updateOne(filter, update)
         return await (await this.collection()).findOne(filter)
 
     }
     async updateMany(filter: Filter<T>, update: UpdateFilter<T>) {
-        const client = await clientPromise;
+        const client = await getClientPromise();
         const res = await (await this.collection()).updateMany(filter, update)
         return res.matchedCount;
     }

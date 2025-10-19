@@ -2,7 +2,7 @@ import { User, UserRole, UserRoleEnum } from "@/models/user"
 import { NextResponse } from "next/server"
 import { Schema, z, ZodType } from "zod"
 import { dbCollection, errorCodes, Permissions } from "./constants"
-import clientPromise from "./mongodb"
+import getClientPromise from "./mongodb"
 import { jwtType, verify } from "./jwt"
 import { SpaceUser, SpaceUserRole } from "@/models/spaceuser"
 import { collections } from "./db"
@@ -62,7 +62,7 @@ export async function withUser(req: Request, role: UserRole | "any", callback: (
         return returnError({ code: errorCodes.unauthorized, message: "Invalid/expired token" })
     }
 
-    const client = await clientPromise
+    const client = await getClientPromise()
     const user = await client.db().collection(dbCollection.user).findOne<User>({ userId: tokenData.userId })
 
     if (!user) {
