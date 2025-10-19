@@ -5,6 +5,7 @@ import { SaveMenuBar } from "@/components/SaveMenuBar"
 import { SimpleCheckboxInput } from "@/components/SimpleCheckbox"
 import TextInput from "@/components/TextInput"
 import { usePhrases } from "@/lib/lang"
+import { getRuntimeConfig } from "@/lib/runtimeConfig"
 import { apiClient } from "@/networking/ApiClient"
 import { useContentypes } from "@/networking/hooks/contenttypes"
 import { useFolders } from "@/networking/hooks/folder"
@@ -77,6 +78,13 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
         setIsLoading(false)
     }, [contenttypes, folders])
 
+    useEffect(() => {
+        // Load runtime config on mount
+        getRuntimeConfig().then((config) => {
+            setFolderDeleteMode(config.FOLDER_DELETE_MODE)
+        })
+    }, [])
+
     const save = async () => {
         setIsSaveLoading(true)
         try {
@@ -135,14 +143,9 @@ export default function Home({ params }: { params: { spaceid: string; folderid: 
     }
 
     const handleDeleteClick = () => {
-        // Get the folder delete mode from environment variable
-        const mode = process.env.NEXT_PUBLIC_FOLDER_DELETE_MODE || "DETACH"
-
-        setFolderDeleteMode(mode)
-
-        if (mode === "PROMPT") {
+        if (folderDeleteMode === "PROMPT") {
             onDeletePromptOpen()
-        } else if (mode === "CASCADE") {
+        } else if (folderDeleteMode === "CASCADE") {
             onDeleteOpen()
         } else {
             // DETACH mode (default)

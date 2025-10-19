@@ -55,7 +55,7 @@ npx ts-node frank.ts user-create john.doe@frank.app "John Doe" "admin"
 | S3_LOCATIONTEMPLATE            | Template to override the format of the location url retured from the s3 client. {path} will be replaced with the file path |
 | EMAIL_DEFAULT_LANGUAGE         | Default language to use for emails, defaults to en                                                                         |
 | BRANDING_FRANK                 | Brand name to use for Frank, defaults to Frank                                                                             |
-| NEXT_PUBLIC_FOLDER_DELETE_MODE | How content cascades on folder deletion                                                                                    |
+| FOLDER_DELETE_MODE             | How content cascades on folder deletion (DETACH, CASCADE, or PROMPT). Defaults to DETACH                                   |
 
 ## Theme Environment variables
 
