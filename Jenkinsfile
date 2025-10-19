@@ -48,42 +48,44 @@ pipeline {
           branch 'main'
         }
       }
-      script {
-            def gitCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-            def branch = env.BRANCH_NAME
-            // Tag will be in the format: develop-20210803120000-abc123
-            def newTag = "${branch}-${new Date().format('yyyyMMddHHmmss')}-${gitCommit}"
+      steps {
+        script {
+              def gitCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+              def branch = env.BRANCH_NAME
+              // Tag will be in the format: develop-20210803120000-abc123
+              def newTag = "${branch}-${new Date().format('yyyyMMddHHmmss')}-${gitCommit}"
 
-            // Login to ECR
-            sh """
-              aws ecr get-login-password --region ${env.AWS_REGION} \
-                | docker login --username AWS --password-stdin ${env.ECR_REGISTRY}
-            """
-
-            // Ensure repo exists (no-op if present)
-            sh """
-              aws ecr describe-repositories --repository-names ${env.APP_NAME} --region ${env.AWS_REGION} >/dev/null 2>&1 \
-              || aws ecr create-repository --repository-name ${env.APP_NAME} --region ${env.AWS_REGION}
-            """
-
-            // Build + push branch-timestamp-commit tag
-            sh """
-              docker build \
-                --build-arg SOURCE_VERSION=${gitCommit} \
-                -t ${env.ECR_REGISTRY}/${env.APP_NAME}:${newTag} .
-              docker push ${env.ECR_REGISTRY}/${env.APP_NAME}:${newTag}
-            """
-            env.DOCKER_TAG = newTag
-
-            // Optionally also push a semver tag on main/master
-            if ((branch == 'main') && params.NEW_VERSION?.trim()) {
+              // Login to ECR
               sh """
-                docker tag  ${env.ECR_REGISTRY}/${env.APP_NAME}:${newTag} \
-                            ${env.ECR_REGISTRY}/${env.APP_NAME}:${params.NEW_VERSION}
-                docker push ${env.ECR_REGISTRY}/${env.APP_NAME}:${params.NEW_VERSION}
+                aws ecr get-login-password --region ${env.AWS_REGION} \
+                  | docker login --username AWS --password-stdin ${env.ECR_REGISTRY}
               """
-            }
-       }
+
+              // Ensure repo exists (no-op if present)
+              sh """
+                aws ecr describe-repositories --repository-names ${env.APP_NAME} --region ${env.AWS_REGION} >/dev/null 2>&1 \
+                || aws ecr create-repository --repository-name ${env.APP_NAME} --region ${env.AWS_REGION}
+              """
+
+              // Build + push branch-timestamp-commit tag
+              sh """
+                docker build \
+                  --build-arg SOURCE_VERSION=${gitCommit} \
+                  -t ${env.ECR_REGISTRY}/${env.APP_NAME}:${newTag} .
+                docker push ${env.ECR_REGISTRY}/${env.APP_NAME}:${newTag}
+              """
+              env.DOCKER_TAG = newTag
+
+              // Optionally also push a semver tag on main/master
+              if ((branch == 'main') && params.NEW_VERSION?.trim()) {
+                sh """
+                  docker tag  ${env.ECR_REGISTRY}/${env.APP_NAME}:${newTag} \
+                              ${env.ECR_REGISTRY}/${env.APP_NAME}:${params.NEW_VERSION}
+                  docker push ${env.ECR_REGISTRY}/${env.APP_NAME}:${params.NEW_VERSION}
+                """
+              }
+         }
+      }
     }
   }
 }
