@@ -16,6 +16,7 @@ out/
 
 # CI/CD
 ci
+Jenkinsfile
 
 # Development files
 .prettierrc
