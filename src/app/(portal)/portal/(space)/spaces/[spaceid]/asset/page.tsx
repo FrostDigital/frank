@@ -10,19 +10,7 @@ import { useAssets, useAssetFolders } from "@/networking/hooks/asset"
 import { useFolders } from "@/networking/hooks/folder"
 import { useSpaces } from "@/networking/hooks/spaces"
 import { useProfile } from "@/networking/hooks/user"
-import {
-    Box,
-    Button,
-    Center, Flex, Heading, HStack, Spinner,
-    Table,
-    Tag,
-    Tbody,
-    Td,
-    Th,
-    Thead,
-    Tooltip,
-    Tr, useToast, VStack
-} from "@chakra-ui/react"
+import { Box, Button, Center, Flex, Heading, HStack, Spinner, Table, Tag, Tbody, Td, Th, Thead, Tooltip, Tr, useToast, VStack } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
 import dayjs from "dayjs"
 import { useRouter } from "next/navigation"
@@ -31,7 +19,7 @@ import { Search } from "react-feather"
 
 export default function Home({ params }: { params: { spaceid: string } }) {
     const router = useRouter()
-    const { t } = usePhrases();
+    const { t } = usePhrases()
     const [mode, setMode] = useState<"list" | "loading">("loading")
     const { profile } = useProfile()
     const { spaces, isLoading: isSpacesLoading } = useSpaces({ enabled: true })
@@ -73,11 +61,8 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                 if (!searchMatch) return false
             }
 
-
             return true
         })
-
-
 
         setFilteredItems(filtered)
     }, [allItems, filterFolder, filterType, filterStatus, filterSearch])
@@ -87,8 +72,6 @@ export default function Home({ params }: { params: { spaceid: string } }) {
         let folders: FilterItem[] = []
         let types: FilterItem[] = []
 
-
-
         allItems.forEach((item) => {
             if (item.assetFolderId) {
                 const folder = folders.find((f) => f.id === item.assetFolderId)
@@ -96,7 +79,6 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                     folders.push({ id: item.assetFolderId, name: item.folderName || t("asset_home_unknown_folder") })
                 }
             }
-
 
             const type = types.find((c) => c.id === item.type)
             if (!type) {
@@ -120,7 +102,6 @@ export default function Home({ params }: { params: { spaceid: string } }) {
         const space = spaces.find((s) => s.spaceId === params.spaceid)
         setSpace(space)
 
-
         setMode("list")
     }, [profile, allItems, folders, spaces])
 
@@ -132,10 +113,9 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                 </Center>
             )}
 
-
             {mode == "list" && (
                 <>
-                    <Flex style={{ minHeight: "calc(100vh - 42px)" }} flex={1} flexDir={"column"} maxW="1400px">
+                    <Flex style={{ minHeight: "calc(100vh - 52px)" }} flex={1} flexDir={"column"} maxW="1400px">
                         <Flex flex={1} flexDir={"row"}>
                             <Flex bg="#fff" width="250px" p={5}>
                                 <VStack spacing={10} alignItems={"flex-start"} w="100%">
@@ -180,7 +160,6 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                         onClick={setFilterStatus}
                                         anyText={t("asset_home_list_filter_status_anytext")}
                                     ></SelectionList>
-
                                 </VStack>
                             </Flex>
                             <Flex flex={1}>
@@ -202,12 +181,15 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                                 </Box>
                                             </HStack>
                                         </Box>
-                                        
-                                            <UploadButton text={t("asset_home_list_create_button")} spaceId={params.spaceid} onUploaded={(asset) => {
-                                                queryClient.invalidateQueries([["asset"]]);
+
+                                        <UploadButton
+                                            text={t("asset_home_list_create_button")}
+                                            spaceId={params.spaceid}
+                                            onUploaded={(asset) => {
+                                                queryClient.invalidateQueries([["asset"]])
                                                 router.push(`/portal/spaces/${params.spaceid}/asset/${asset.assetId}`)
-                                            }}></UploadButton>
-                                        
+                                            }}
+                                        ></UploadButton>
                                     </HStack>
                                     <Box pt={5}>
                                         {filteredItems.length > 0 ? (
@@ -215,11 +197,10 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                                 <Thead>
                                                     <Tr>
                                                         <Th>{t("asset_home_list_table_heading_name")}</Th>
-                                                        
+
                                                         <Th width="200px">{t("asset_home_list_table_heading_modified")}</Th>
-                                                        
+
                                                         <Th width="150px">{t("asset_home_list_table_heading_status")}</Th>
-                                                        
                                                     </Tr>
                                                 </Thead>
                                                 <Tbody>
@@ -232,19 +213,17 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                                             }}
                                                         >
                                                             <Td fontWeight="600">
-                                                            <Box mb={1}>{item.name}</Box>
+                                                                <Box mb={1}>{item.name}</Box>
                                                                 <Tag size="sm" colorScheme="gray">
                                                                     {item.type.toUpperCase()}
                                                                 </Tag>
-                                                                
-                                                                </Td>
-                                                            
+                                                            </Td>
 
                                                             <Td>
                                                                 <Box>{dayjs(item.modifiedDate).format("YYYY-MM-DD")}</Box>
                                                                 <Box fontSize="12px">{item.modifiedUserName}</Box>
                                                             </Td>
-                                                            
+
                                                             <Td>
                                                                 {item.status == "disabled" ? (
                                                                     <Tag colorScheme="red" ml={5}>
@@ -256,7 +235,6 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                                                     </Tag>
                                                                 )}
                                                             </Td>
-                                                            
                                                         </Tr>
                                                     ))}
                                                 </Tbody>

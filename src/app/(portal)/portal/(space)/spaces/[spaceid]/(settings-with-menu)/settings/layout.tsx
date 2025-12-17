@@ -7,14 +7,14 @@ import { useEffect } from "react"
 
 export default function Layout({ children, params }: { children: React.ReactNode; params: { spaceid: string; setting: string } }) {
     const router = useRouter()
-    
+
     const { setMainMenu, mainMenu, settingsMenu } = useAppStore((state) => state)
     useEffect(() => {
         if (mainMenu !== "settings") setMainMenu("settings")
     }, [mainMenu])
     return (
         <>
-            <Flex style={{ minHeight: "calc(100vh - 42px)" }} flex={1} flexDir={"column"} position={"relative"}>
+            <Flex style={{ minHeight: "calc(100vh - 52px)" }} flex={1} flexDir={"column"} position={"relative"}>
                 <Flex flex={1} flexDir={"row"}>
                     <Flex bg="#fff" width="250px" p={5}>
                         <VStack spacing={10} alignItems={"flex-start"} w="100%">
@@ -29,7 +29,6 @@ export default function Layout({ children, params }: { children: React.ReactNode
                                         router.push(`/portal/spaces/${params.spaceid}/settings`)
                                     }}
                                 ></SelectionButton>
-                                                         
                             </VStack>
 
                             <VStack alignItems={"flex-start"} w="100%">
@@ -50,15 +49,14 @@ export default function Layout({ children, params }: { children: React.ReactNode
                                         router.push(`/portal/spaces/${params.spaceid}/settings/user/api`)
                                     }}
                                 ></SelectionButton>
-                                
-                                    <SelectionButton
-                                        text="Content access keys"
-                                        selected={settingsMenu === "keys"}
-                                        onClick={() => {
-                                            router.push(`/portal/spaces/${params.spaceid}/settings/user/keys`)
-                                        }}
-                                    ></SelectionButton>
-                                
+
+                                <SelectionButton
+                                    text="Content access keys"
+                                    selected={settingsMenu === "keys"}
+                                    onClick={() => {
+                                        router.push(`/portal/spaces/${params.spaceid}/settings/user/keys`)
+                                    }}
+                                ></SelectionButton>
                             </VStack>
 
                             <VStack alignItems={"flex-start"} w="100%">
@@ -71,7 +69,7 @@ export default function Layout({ children, params }: { children: React.ReactNode
                                     onClick={() => {
                                         router.push(`/portal/spaces/${params.spaceid}/settings/links`)
                                     }}
-                                ></SelectionButton>                                      
+                                ></SelectionButton>
                                 <SelectionButton
                                     text="Webhooks"
                                     selected={settingsMenu === "webhooks"}

@@ -56,7 +56,6 @@ export default function Home({ params }: { params: {} }) {
             return true
         })
 
-
         setFilteredUsers(filtered)
     }, [users, filterStatus, filterSearch, filterRole])
 
@@ -196,7 +195,7 @@ export default function Home({ params }: { params: {} }) {
 
             {mode == "list" && (
                 <>
-                    <Flex style={{ minHeight: "calc(100vh - 42px)" }} flex={1} flexDir={"column"} maxW="1400px">
+                    <Flex style={{ minHeight: "calc(100vh - 52px)" }} flex={1} flexDir={"column"} maxW="1400px">
                         <Flex flex={1} flexDir={"row"}>
                             <Flex bg="#fff" width="250px" p={5}>
                                 <VStack spacing={10} alignItems={"flex-start"} w="100%">

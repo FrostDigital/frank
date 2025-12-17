@@ -28,7 +28,7 @@ export default function Home({ params }: { params: { spaceid: string } }) {
     const { profile } = useProfile()
     const { spaces, isLoading: isSpacesLoading } = useSpaces({ enabled: true })
     const { contenttypes, isLoading: isContenttypesLoading } = useContentypes(params.spaceid, {})
-    const { t } = usePhrases();
+    const { t } = usePhrases()
 
     const [filterStatus, setFilterStatus] = useState<string>("")
     const [filterSearch, setFilterSearch] = useState<string>("")
@@ -44,11 +44,11 @@ export default function Home({ params }: { params: { spaceid: string } }) {
     useEffect(() => {
         if (!contenttypes) return
         const filtered = contenttypes.filter((item) => {
-            if(item.managedByModule) return false;
+            if (item.managedByModule) return false
             if (filterStatus) {
                 if (item.enabled !== (filterStatus === "enabled")) return false
             }
-            if (filterVisibility){
+            if (filterVisibility) {
                 if (item.hidden !== (filterVisibility === "hidden")) return false
             }
             if (filterSearch) {
@@ -62,7 +62,7 @@ export default function Home({ params }: { params: { spaceid: string } }) {
 
         setFilteredItems(filtered)
     }, [contenttypes, filterStatus, filterSearch, filterVisibility])
-    const languages = getAllLangauges();
+    const languages = getAllLangauges()
     const languageOptions = languages.map((l) => ({ key: l.code, text: l.name }))
     useEffect(() => {
         if (!profile) return
@@ -130,9 +130,7 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                     <Heading>{t("content_type_home_create_heading")}</Heading>
                                     <Box color="grey" fontSize="14px">
                                         <Box>{t("content_type_home_create_description1")}</Box>
-                                        <Box mt="5">
-                                            {t("content_type_home_create_description2")}
-                                        </Box>
+                                        <Box mt="5">{t("content_type_home_create_description2")}</Box>
                                     </Box>
                                 </VStack>
                             </Box>
@@ -176,7 +174,7 @@ export default function Home({ params }: { params: { spaceid: string } }) {
 
             {mode == "list" && (
                 <>
-                    <Flex style={{ minHeight: "calc(100vh - 42px)" }} flex={1} flexDir={"column"} maxW="1400px">
+                    <Flex style={{ minHeight: "calc(100vh - 52px)" }} flex={1} flexDir={"column"} maxW="1400px">
                         <Flex flex={1} flexDir={"row"}>
                             <Flex bg="#fff" width="250px" p={5}>
                                 <VStack spacing={10} alignItems={"flex-start"} w="100%">
@@ -200,7 +198,6 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                         onClick={setFilterVisibility}
                                         anyText={t("content_type_home_filter_visibility_anytext")}
                                     ></SelectionList>
-
                                 </VStack>
                             </Flex>
                             <Flex flex={1}>
