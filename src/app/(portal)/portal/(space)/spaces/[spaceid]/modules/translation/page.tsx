@@ -21,7 +21,7 @@ import dayjs from "dayjs"
 import { useRouter } from "next/navigation"
 import { usePhrases } from "@/lib/lang"
 export default function Home({ params }: { params: { spaceid: string } }) {
-    const { t } = usePhrases();
+    const { t } = usePhrases()
     const router = useRouter()
     const [mode, setMode] = useState<"list" | "create" | "loading">("loading")
     const [name, setName] = useState<string>("")
@@ -40,7 +40,6 @@ export default function Home({ params }: { params: { spaceid: string } }) {
     useEffect(() => {
         if (!items) return
         const filtered = items.filter((item) => {
-
             if (item.managedByModule !== "translation") return false
             if (filterStatus) {
                 if (item.status !== filterStatus) return false
@@ -98,15 +97,13 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                             title: true,
                             validators: { required: { enabled: true }, unique: { enabled: false }, minLength: { enabled: false, min: 0 }, maxLength: { enabled: true, max: 4096 } },
                             settings: [],
-                            output: false
+                            output: false,
                         },
                     ],
                     generateSlug: true,
                     hidden: true,
-
                 },
             })
-
 
             const contentCreateResponse = await apiClient.post<Content, PostContentRequest>({
                 path: `/space/${params.spaceid}/content`,
@@ -122,25 +119,22 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                 throw "Space not found"
             }
 
-
-
             const contentUpdateResponse = await apiClient.put<PutContentItemResponse, PutContentItemRequest>({
                 path: `/space/${params.spaceid}/content/${contentCreateResponse.contentId}`,
                 isAuthRequired: true,
                 body: {
                     status: "draft",
-                    data: [{
-                        languageId: space.defaultLanguage,
-                        data: {
-                            __name: name
-                        }
-                    }]
-                }
+                    data: [
+                        {
+                            languageId: space.defaultLanguage,
+                            data: {
+                                __name: name,
+                            },
+                        },
+                    ],
+                },
             })
             queryClient.invalidateQueries([["content", params.spaceid]])
-
-
-
 
             setCreateLoading(false)
             queryClient.invalidateQueries([["content", params.spaceid]])
@@ -186,12 +180,8 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                 <VStack alignItems="flex-start" spacing="5">
                                     <Heading>{t("module_translation_create_heading")}.</Heading>
                                     <Box color="grey" fontSize="14px">
-                                        <Box>
-                                            {t("module_translation_create_description1")}
-                                        </Box>
-                                        <Box mt="5">
-                                            {t("module_translation_create_description2")}
-                                        </Box>
+                                        <Box>{t("module_translation_create_description1")}</Box>
+                                        <Box mt="5">{t("module_translation_create_description2")}</Box>
                                     </Box>
                                 </VStack>
                             </Box>
@@ -235,7 +225,7 @@ export default function Home({ params }: { params: { spaceid: string } }) {
 
             {mode == "list" && (
                 <>
-                    <Flex style={{ minHeight: "calc(100vh - 42px)" }} flex={1} flexDir={"column"} maxW="1400px">
+                    <Flex style={{ minHeight: "calc(100vh - 52px)" }} flex={1} flexDir={"column"} maxW="1400px">
                         <Flex flex={1} flexDir={"row"}>
                             <Flex bg="#fff" width="250px" p={5}>
                                 <VStack spacing={10} alignItems={"flex-start"} w="100%">
@@ -326,7 +316,3 @@ export default function Home({ params }: { params: { spaceid: string } }) {
         </>
     )
 }
-
-
-
-
