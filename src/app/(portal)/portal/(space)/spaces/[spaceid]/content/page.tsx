@@ -43,6 +43,23 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { ChevronDown, Eye, EyeOff, Layers, Loader, Search, Trash2, X } from "react-feather"
 
+// Custom debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value)
+        }, delay)
+
+        return () => {
+            clearTimeout(handler)
+        }
+    }, [value, delay])
+
+    return debouncedValue
+}
+
 export default function Home({ params }: { params: { spaceid: string } }) {
     const { t } = usePhrases()
     const { setSelectedFolder, selectedFolder } = useAppStore((state) => state)
@@ -63,7 +80,8 @@ export default function Home({ params }: { params: { spaceid: string } }) {
     const [filterContentType, setFilterContentType] = useState<string>("")
     const [filterUser, setFilterUser] = useState<string>("")
     const [filterStatus, setFilterStatus] = useState<string>("")
-    const [filterSearch, setFilterSearch] = useState<string>("")
+    const [filterSearchInput, setFilterSearchInput] = useState<string>("")
+    const filterSearch = useDebounce(filterSearchInput, 400)
     const [filterDate, setFilterDate] = useState<string>("")
     const [createContentType, setCreateContentType] = useState<string>("")
     const [createLoading, setCreateLoading] = useState<boolean>(false)
@@ -511,12 +529,12 @@ export default function Home({ params }: { params: { spaceid: string } }) {
                                                 <Search></Search>
                                                 <Box w="300px">
                                                     <TextInput
-                                                        value=""
+                                                        value={filterSearchInput}
                                                         placeholder={t("content_page_list_search_placeholder")}
                                                         bg="#fff"
                                                         focus={true}
-                                                        onChange={setFilterSearch}
-                                                        onSubmit={setFilterSearch}
+                                                        onChange={setFilterSearchInput}
+                                                        onSubmit={setFilterSearchInput}
                                                     ></TextInput>
                                                 </Box>
                                             </HStack>

@@ -35,12 +35,20 @@ Create `.env` file in project root with the following required variables:
 - `JWT_SIGNINGKEY` - Key for signing JWT tokens
 - `JWT_LOGIN_EXPIRES_IN` - Login token expiration (e.g., "1h")
 - `JWT_AUTHTOKEN_EXPIRES_IN` - Auth token expiration (e.g., "24h")
-- `EMAIL_SERVER_*` - SMTP configuration
+- `EMAIL_SERVER_HOST`, `EMAIL_SERVER_PORT`, `EMAIL_SERVER_USER`, `EMAIL_SERVER_PASSWORD` - SMTP configuration
+- `EMAIL_FROM` - Default email sender address
+- `EMAIL_DEFAULT_LANGUAGE` - Default language for emails (defaults to "en")
 - `OPENAI_APIKEY` - OpenAI API key for AI features
 - `OPENAI_MODEL` - OpenAI model (e.g., "gpt-3.5-turbo")
 - `PUBLIC_URL` - Frank server URL
-- `S3_*` - S3 storage configuration (AWS or compatible services like OpenStack Swift)
-- Theme colors via `THEME_BLUE_*`, `THEME_GREEN_*`, `THEME_RED_*` environment variables
+- `S3_ACCESSKEYID`, `S3_SECRETACCESSKEY`, `S3_BUCKET`, `S3_ENDPOINT`, `S3_REGION` - S3 storage configuration (AWS or compatible services)
+- `S3_PREFIX` - URL prefix for uploaded files (e.g., "frank-files/")
+- `S3_ACL` - ACL for uploaded files
+- `S3_LOCATIONTEMPLATE` - Template to override S3 location URL format ({path} will be replaced)
+- `BRANDING_FRANK` - Custom brand name (defaults to "Frank")
+- `FOLDER_DELETE_MODE` - Content cascade behavior on folder deletion: DETACH (default), CASCADE, or PROMPT
+- `THEME_BLUE_*`, `THEME_GREEN_*`, `THEME_RED_*` (50-900) - Custom theme color palette
+- `THEME_HORIZONTAL_LOGO`, `THEME_VERTICAL_LOGO` - Custom logo URLs
 
 ## Architecture
 
@@ -50,17 +58,20 @@ Frank uses Next.js 13 App Router with file-based API routing. Routes are organiz
 
 ```
 src/app/api/
-├── user/                    # User management
+├── user/                    # User management (login, profile, tokens)
 ├── space/[spaceid]/         # Space-scoped resources
 │   ├── content/             # Content CRUD
 │   ├── contenttype/         # Content type definitions
-│   ├── asset/               # Asset management
+│   ├── asset/               # Asset management (with image processing)
 │   ├── folder/              # Folder organization
-│   ├── user/                # Space users
+│   ├── user/                # Space users and API keys
 │   ├── accesskey/           # Content access keys
-│   ├── webhook/             # Webhooks
-│   ├── ai/                  # AI operations
+│   ├── webhook/             # Webhooks and events
+│   ├── ai/                  # AI operations (translate, rephrase, tasks)
+│   ├── link/                # Custom menu links
 │   └── trash/               # Trash management
+├── theme/                   # Theme configuration
+└── runtime-config/          # Runtime configuration endpoint
 ```
 
 Each endpoint follows a pattern:
@@ -80,6 +91,10 @@ Each endpoint follows a pattern:
 - Methods: `findOne`, `getById`, `create`, `findMany`, `updateOne`, `updateMany`, `deleteMany`, `aggregate`
 
 **Connection**: `src/lib/mongodb.ts` - MongoDB client singleton
+
+**Important**: Content listing API (`src/app/api/space/[spaceid]/content/get.ts`) loads ALL content items without pagination. This design choice prioritizes simplicity over scalability - filtering and "Load more" functionality is handled client-side. To mitigate performance impact:
+- Search input uses 300ms debouncing to reduce excessive filtering on keystroke
+- Consider reintroducing server-side pagination if content sets grow very large
 
 ### API Utilities (`src/lib/apiUtils.ts`)
 
@@ -162,5 +177,7 @@ Each route exports a `*_DOC` constant for OpenAPI spec generation
 
 Dockerfile includes:
 - Node.js 16 with libvips (for Sharp image processing)
-- Cron jobs for scheduled tasks (`/schedule/oneminute`, `/schedule/fiveminute`)
+- Cron setup for scheduled tasks (configured to call `/schedule/oneminute` every minute and `/schedule/fiveminute` every 5 minutes)
 - Production build with Next.js
+
+**Note**: Schedule endpoints referenced in Dockerfile may need to be implemented if scheduled tasks are required.
